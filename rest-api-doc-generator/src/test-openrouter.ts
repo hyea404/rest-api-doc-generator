@@ -1,14 +1,14 @@
 import axios from 'axios';
 
 async function testOpenRouter() {
-    const API_KEY = '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';
+    const API_KEY = 'sk-or-v1-PLACEHOLDER';
     const url = 'https://openrouter.ai/api/v1/chat/completions';
     
     try {
         console.log('Testing OpenRouter API...');
         
         const response = await axios.post(url, {
-            model: 'google/gemma-2-9b-it',
+            model: 'google/gemma-3-12b-it',
             messages: [
                 {
                     role: 'user',
