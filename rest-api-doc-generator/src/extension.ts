@@ -1,41 +1,89 @@
-import axios from 'axios';
+import * as vscode from 'vscode';
+import { SecureStorageService } from './services/SecureStorageService';
 
-async function testOpenRouter() {
-    const API_KEY = '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';
-    const url = 'https://openrouter.ai/api/v1/chat/completions';
-    
-    try {
-        console.log('Testing OpenRouter API...');
-        
-        const response = await axios.post(url, {
-            model: 'google/gemma-2-9b-it',
-            messages: [
-                {
-                    role: 'user',
-                    content: 'Generate OpenAPI documentation for a simple GET /users endpoint'
+let storageService: SecureStorageService;
+
+export function activate(context: vscode.ExtensionContext) {
+    console.log('🚀 REST API Doc Generator is now active!');
+
+    // Initialize SecureStorageService
+    storageService = new SecureStorageService(context);
+
+    // Command: Set API Key
+    let setApiKeyCommand = vscode.commands.registerCommand(
+        'rest-api-doc-generator.setApiKey',
+        async () => {
+            const apiKey = await vscode.window.showInputBox({
+                prompt: 'Enter your OpenRouter API Key',
+                placeHolder: 'sk-or-v1-...',
+                password: true, // Hide input
+                ignoreFocusOut: true,
+                validateInput: (value) => {
+                    if (!value || value.trim().length === 0) {
+                        return 'API key cannot be empty';
+                    }
+                    if (!value.startsWith('sk-or-v1-')) {
+                        return 'Invalid API key format. Should start with sk-or-v1-';
+                    }
+                    return null;
                 }
-            ]
-        }, {
-            headers: {
-                'Authorization': `Bearer ${API_KEY}`,
-                'Content-Type': 'application/json'
-            },
-            timeout: 10000 // 10 second timeout
-        });
-        
-        console.log('✅ API Test Success!');
-        console.log('Model:', response.data.model);
-        console.log('Response:', response.data.choices[0].message.content);
-        
-    } catch (error: any) {
-        console.error('❌ API Test Failed!');
-        if (error.response) {
-            console.error('Status:', error.response.status);
-            console.error('Error:', error.response.data);
-        } else {
-            console.error('Error:', error.message);
+            });
+
+            if (apiKey) {
+                try {
+                    await storageService.storeApiKey(apiKey);
+                    vscode.window.showInformationMessage('✅ API key saved successfully!');
+                } catch (error) {
+                    vscode.window.showErrorMessage('❌ Failed to save API key');
+                }
+            }
         }
-    }
+    );
+
+    // Command: Check API Key Status
+    let checkApiKeyCommand = vscode.commands.registerCommand(
+        'rest-api-doc-generator.checkApiKey',
+        async () => {
+            const hasKey = await storageService.hasApiKey();
+            if (hasKey) {
+                const apiKey = await storageService.getApiKey();
+                const maskedKey = apiKey ? `${apiKey.substring(0, 15)}...` : '';
+                vscode.window.showInformationMessage(`✅ API key is set: ${maskedKey}`);
+            } else {
+                vscode.window.showWarningMessage('⚠️ API key is not set. Use "Set API Key" command.');
+            }
+        }
+    );
+
+    // Command: Delete API Key
+    let deleteApiKeyCommand = vscode.commands.registerCommand(
+        'rest-api-doc-generator.deleteApiKey',
+        async () => {
+            const confirm = await vscode.window.showWarningMessage(
+                'Are you sure you want to delete the API key?',
+                { modal: true },
+                'Yes', 'No'
+            );
+
+            if (confirm === 'Yes') {
+                try {
+                    await storageService.deleteApiKey();
+                    vscode.window.showInformationMessage('✅ API key deleted successfully');
+                } catch (error) {
+                    vscode.window.showErrorMessage('❌ Failed to delete API key');
+                }
+            }
+        }
+    );
+
+    context.subscriptions.push(setApiKeyCommand, checkApiKeyCommand, deleteApiKeyCommand);
 }
 
-testOpenRouter();
+export function deactivate() {
+    console.log('👋 REST API Doc Generator deactivated');
+}
+
+// Export storage service untuk digunakan di module lain
+export function getStorageService(): SecureStorageService {
+    return storageService;
+}
