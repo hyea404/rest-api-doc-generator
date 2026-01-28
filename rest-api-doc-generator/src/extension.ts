@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { SecureStorageService } from './services/SecureStorageService';
+import { ParserService } from './services/ParserService';
 
 let storageService: SecureStorageService;
 
@@ -76,7 +77,83 @@ export function activate(context: vscode.ExtensionContext) {
         }
     );
 
-    context.subscriptions.push(setApiKeyCommand, checkApiKeyCommand, deleteApiKeyCommand);
+    let scanRoutesCommand = vscode.commands.registerCommand(
+        'rest-api-doc-generator.scanRoutes',
+        async () => {
+            // Check workspace
+            const workspaceFolders = vscode.workspace.workspaceFolders;
+            if (!workspaceFolders || workspaceFolders.length === 0) {
+                vscode.window.showErrorMessage('❌ No workspace folder open');
+                return;
+            }
+
+            const workspaceRoot = workspaceFolders[0].uri.fsPath;
+
+            try {
+                vscode.window.showInformationMessage('🔍 Scanning routes...');
+
+                // Create parser service
+                const parserService = new ParserService(workspaceRoot);
+
+                // Scan and parse
+                const result = await parserService.scanAndParseRoutes();
+
+                // Show results
+                if (result.totalRoutes > 0) {
+                    const outputChannel = vscode.window.createOutputChannel('REST API Routes');
+                    outputChannel.clear();
+                    outputChannel.appendLine('='.repeat(60));
+                    outputChannel.appendLine('REST API ROUTES SCAN RESULTS');
+                    outputChannel.appendLine('='.repeat(60));
+                    outputChannel.appendLine(`Total Files: ${result.totalFiles}`);
+                    outputChannel.appendLine(`Total Routes: ${result.totalRoutes}`);
+                    outputChannel.appendLine(`Errors: ${result.errors.length}`);
+                    outputChannel.appendLine('');
+
+                    // Group routes by file
+                    const routesByFile = new Map<string, typeof result.routes>();
+                    for (const route of result.routes) {
+                        if (!routesByFile.has(route.filePath)) {
+                            routesByFile.set(route.filePath, []);
+                        }
+                        routesByFile.get(route.filePath)!.push(route);
+                    }
+
+                    // Display routes
+                    routesByFile.forEach((routes, filePath) => {
+                        outputChannel.appendLine(`\n📄 ${filePath}`);
+                        outputChannel.appendLine('-'.repeat(60));
+                        
+                        routes.forEach(route => {
+                            outputChannel.appendLine(
+                                `  ${route.method.padEnd(7)} ${route.path}`
+                            );
+                            if (route.parameters.length > 0) {
+                                outputChannel.appendLine(
+                                    `           Parameters: ${route.parameters.map(p => p.name).join(', ')}`
+                                );
+                            }
+                            if (route.middlewares.length > 0) {
+                                outputChannel.appendLine(
+                                    `           Middlewares: ${route.middlewares.map(m => m.name).join(', ')}`
+                                );
+                            }
+                        });
+                    });
+
+                    outputChannel.show();
+                } else {
+                    vscode.window.showWarningMessage('⚠️ No routes found');
+                }
+
+            } catch (error) {
+                console.error('❌ Error scanning routes:', error);
+                vscode.window.showErrorMessage('❌ Failed to scan routes');
+            }
+        }
+    );
+
+    context.subscriptions.push(setApiKeyCommand, checkApiKeyCommand, deleteApiKeyCommand, scanRoutesCommand);
 }
 
 export function deactivate() {

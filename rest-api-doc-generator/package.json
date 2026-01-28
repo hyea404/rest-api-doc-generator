@@ -28,6 +28,10 @@
       {
         "command": "rest-api-doc-generator.deleteApiKey",
         "title": "REST API Docs: Delete API Key"
+      },
+      {
+        "command": "rest-api-doc-generator.scanRoutes",
+        "title": "REST API Docs: Scan Routes"
       }
     ]
   },
