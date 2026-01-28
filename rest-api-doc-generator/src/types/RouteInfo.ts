@@ -19,7 +19,10 @@ export interface RouteParameter {
     type: 'path' | 'query' | 'body';
     required: boolean;
     description?: string;
-    dataType?: string; // 'string', 'number', 'boolean', 'object', dll
+    dataType?: string; // 'string', 'number', 'boolean', 'object', 'array'
+    schema?: any; // For complex object types
+    example?: any; // Example value
+
 }
 
 /**

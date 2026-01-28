@@ -121,25 +121,59 @@ export function activate(context: vscode.ExtensionContext) {
 
                     // Display routes
                     routesByFile.forEach((routes, filePath) => {
-                        outputChannel.appendLine(`\n📄 ${filePath}`);
-                        outputChannel.appendLine('-'.repeat(60));
+                    outputChannel.appendLine(`\n📄 ${filePath}`);
+                    outputChannel.appendLine('-'.repeat(60));
+                    
+                    routes.forEach(route => {
+                        // Display method and path
+                        outputChannel.appendLine(
+                            `  ${route.method.padEnd(7)} ${route.path}`
+                        );
                         
-                        routes.forEach(route => {
+                        // Group parameters by type
+                        const pathParams = route.parameters.filter(p => p.type === 'path');
+                        const queryParams = route.parameters.filter(p => p.type === 'query');
+                        const bodyParams = route.parameters.filter(p => p.type === 'body');
+                        
+                        // Display path parameters
+                        if (pathParams.length > 0) {
                             outputChannel.appendLine(
-                                `  ${route.method.padEnd(7)} ${route.path}`
+                                `           Path Params: ${pathParams.map(p => p.name).join(', ')}`
                             );
-                            if (route.parameters.length > 0) {
-                                outputChannel.appendLine(
-                                    `           Parameters: ${route.parameters.map(p => p.name).join(', ')}`
-                                );
-                            }
-                            if (route.middlewares.length > 0) {
-                                outputChannel.appendLine(
-                                    `           Middlewares: ${route.middlewares.map(m => m.name).join(', ')}`
-                                );
-                            }
-                        });
+                        }
+                        
+                        // Display query parameters
+                        if (queryParams.length > 0) {
+                            outputChannel.appendLine(
+                                `           Query Params: ${queryParams.map(p => p.name).join(', ')}`
+                            );
+                        }
+                        
+                        // Display body parameters
+                        if (bodyParams.length > 0) {
+                            outputChannel.appendLine(
+                                `           Body Params: ${bodyParams.map(p => p.name).join(', ')}`
+                            );
+                        }
+                        
+                        // Display middlewares
+                        if (route.middlewares.length > 0) {
+                            outputChannel.appendLine(
+                                `           Middlewares: ${route.middlewares.map(m => m.name).join(', ')}`
+                            );
+                        }
+                        
+                        // Display response status codes
+                        if (route.responses && route.responses.length > 0) {
+                            const statusCodes = route.responses.map(r => 
+                                `${r.statusCode} (${r.description})`
+                            ).join(', ');
+                            outputChannel.appendLine(
+                                `           Responses: ${statusCodes}`
+                            );
+                        }
                     });
+                });
 
                     outputChannel.show();
                 } else {
