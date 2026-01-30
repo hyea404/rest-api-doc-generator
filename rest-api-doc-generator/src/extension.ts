@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { SecureStorageService } from './services/SecureStorageService';
 import { ParserService } from './services/ParserService';
+import { OpenRouterClient } from './services/OpenRouterClient';
 
 let storageService: SecureStorageService;
 
@@ -187,7 +188,43 @@ export function activate(context: vscode.ExtensionContext) {
         }
     );
 
-    context.subscriptions.push(setApiKeyCommand, checkApiKeyCommand, deleteApiKeyCommand, scanRoutesCommand);
+    // Command: Test OpenRouter Connection
+    let testConnectionCommand = vscode.commands.registerCommand(
+        'rest-api-doc-generator.testConnection',
+        async () => {
+            try {
+                // Get API key from storage
+                const apiKey = await storageService.getApiKey();
+                
+                if (!apiKey) {
+                    vscode.window.showWarningMessage(
+                        '⚠️ API key not set. Please set your OpenRouter API key first.'
+                    );
+                    return;
+                }
+
+                vscode.window.showInformationMessage('🧪 Testing OpenRouter connection...');
+
+                // Create client and test
+                const client = new OpenRouterClient(apiKey);
+                const isConnected = await client.testConnection();
+
+                if (isConnected) {
+                    vscode.window.showInformationMessage(
+                        `✅ Connection successful! Model: ${client.getModel()}`
+                    );
+                } else {
+                    vscode.window.showErrorMessage('❌ Connection failed. Please check your API key.');
+                }
+
+            } catch (error: any) {
+                console.error('❌ Connection test error:', error);
+                vscode.window.showErrorMessage(`❌ Connection failed: ${error.message}`);
+            }
+        }
+    );
+
+    context.subscriptions.push(setApiKeyCommand, checkApiKeyCommand, deleteApiKeyCommand, scanRoutesCommand, testConnectionCommand);
 }
 
 export function deactivate() {

@@ -32,6 +32,10 @@
       {
         "command": "rest-api-doc-generator.scanRoutes",
         "title": "REST API Docs: Scan Routes"
+      },
+      {
+        "command": "rest-api-doc-generator.testConnection",
+        "title": "REST API Docs: Test OpenRouter Connection"
       }
     ]
   },
