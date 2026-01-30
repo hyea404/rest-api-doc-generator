@@ -36,6 +36,14 @@
       {
         "command": "rest-api-doc-generator.testConnection",
         "title": "REST API Docs: Test OpenRouter Connection"
+      },
+      {
+        "command": "rest-api-doc-generator.testPrompt",
+        "title": "REST API Docs: Test Prompt Generation"
+      },
+      {
+        "command": "rest-api-doc-generator.listModels",
+        "title": "REST API Docs: List Available Models"
       }
     ]
   },

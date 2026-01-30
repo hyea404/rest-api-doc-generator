@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import { SecureStorageService } from './services/SecureStorageService';
 import { ParserService } from './services/ParserService';
 import { OpenRouterClient } from './services/OpenRouterClient';
+import { RouteInfo, HttpMethod } from './types/RouteInfo';
 
 let storageService: SecureStorageService;
 
@@ -224,7 +225,108 @@ export function activate(context: vscode.ExtensionContext) {
         }
     );
 
-    context.subscriptions.push(setApiKeyCommand, checkApiKeyCommand, deleteApiKeyCommand, scanRoutesCommand, testConnectionCommand);
+    // Command: Test Prompt Generation
+    let testPromptCommand = vscode.commands.registerCommand(
+        'rest-api-doc-generator.testPrompt',
+        async () => {
+            try {
+                // Get API key
+                const apiKey = await storageService.getApiKey();
+                if (!apiKey) {
+                    vscode.window.showWarningMessage('⚠️ API key not set');
+                    return;
+                }
+
+                vscode.window.showInformationMessage('🧪 Testing prompt generation...');
+
+                // Create sample route untuk testing
+                const sampleRoute: RouteInfo = {
+                    method: HttpMethod.GET,
+                    path: '/users/:id',
+                    handler: 'getUserById',
+                    parameters: [
+                        { name: 'id', type: 'path', required: true, dataType: 'string' }
+                    ],
+                    responses: [
+                        { statusCode: 200, description: 'Success', contentType: 'application/json' },
+                        { statusCode: 404, description: 'Not Found', contentType: 'application/json' }
+                    ],
+                    middlewares: [],
+                    filePath: 'test.js'
+                };
+
+                // Generate documentation
+                const client = new OpenRouterClient(apiKey);
+                const yaml = await client.generateDocumentation(sampleRoute);
+
+                // Show result in output channel
+                const outputChannel = vscode.window.createOutputChannel('Prompt Test Result');
+                outputChannel.clear();
+                outputChannel.appendLine('='.repeat(60));
+                outputChannel.appendLine('GENERATED OPENAPI DOCUMENTATION');
+                outputChannel.appendLine('='.repeat(60));
+                outputChannel.appendLine(yaml);
+                outputChannel.show();
+
+                vscode.window.showInformationMessage('✅ Prompt test successful! Check output panel.');
+
+            } catch (error: any) {
+                console.error('❌ Test prompt error:', error);
+                vscode.window.showErrorMessage(`❌ Test failed: ${error.message}`);
+            }
+        }
+    );
+
+    // Command: List Available Models
+    let listModelsCommand = vscode.commands.registerCommand(
+        'rest-api-doc-generator.listModels',
+        async () => {
+            try {
+                const apiKey = await storageService.getApiKey();
+                if (!apiKey) {
+                    vscode.window.showWarningMessage('⚠️ API key not set');
+                    return;
+                }
+
+                vscode.window.showInformationMessage('🔍 Fetching available models...');
+
+                const client = new OpenRouterClient(apiKey);
+                const models = await client.getAvailableModels();
+
+                // Filter untuk Gemma models
+                const gemmaModels = models.data.filter((m: any) => 
+                    m.id.toLowerCase().includes('gemma')
+                );
+
+                const outputChannel = vscode.window.createOutputChannel('Available Models');
+                outputChannel.clear();
+                outputChannel.appendLine('='.repeat(60));
+                outputChannel.appendLine('AVAILABLE GEMMA MODELS');
+                outputChannel.appendLine('='.repeat(60));
+                
+                gemmaModels.forEach((model: any) => {
+                    outputChannel.appendLine(`\n📦 ${model.id}`);
+                    outputChannel.appendLine(`   Name: ${model.name}`);
+                    outputChannel.appendLine(`   Context: ${model.context_length} tokens`);
+                    if (model.pricing) {
+                        outputChannel.appendLine(`   Free: ${model.pricing.prompt === '0' ? 'Yes' : 'No'}`);
+                    }
+                });
+
+                outputChannel.show();
+                vscode.window.showInformationMessage('✅ Models list loaded');
+
+            } catch (error: any) {
+                console.error('❌ List models error:', error);
+                vscode.window.showErrorMessage(`❌ Failed: ${error.message}`);
+            }
+        }
+    );
+
+    context.subscriptions.push(listModelsCommand);
+
+
+    context.subscriptions.push(setApiKeyCommand, checkApiKeyCommand, deleteApiKeyCommand, scanRoutesCommand, testConnectionCommand, testPromptCommand);
 }
 
 export function deactivate() {
