@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>REST API Docs Settings</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--vscode-font-family);
+            color: var(--vscode-foreground);
+            background-color: var(--vscode-editor-background);
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: var(--vscode-foreground);
+            margin-bottom: 10px;
+            font-size: 24px;
+        }
+
+        .subtitle {
+            color: var(--vscode-descriptionForeground);
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .section {
+            background: var(--vscode-editor-background);
+            border: 1px solid var(--vscode-panel-border);
+            border-radius: 6px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: var(--vscode-foreground);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-title::before {
+            content: '';
+            width: 4px;
+            height: 18px;
+            background: var(--vscode-textLink-foreground);
+            border-radius: 2px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+            font-size: 13px;
+            color: var(--vscode-foreground);
+        }
+
+        .label-description {
+            font-size: 12px;
+            color: var(--vscode-descriptionForeground);
+            font-weight: normal;
+            margin-top: 2px;
+        }
+
+        input[type="text"],
+        input[type="password"],
+        select {
+            width: 100%;
+            padding: 8px 12px;
+            background: var(--vscode-input-background);
+            color: var(--vscode-input-foreground);
+            border: 1px solid var(--vscode-input-border);
+            border-radius: 4px;
+            font-size: 13px;
+            font-family: var(--vscode-font-family);
+        }
+
+        input:focus,
+        select:focus {
+            outline: 1px solid var(--vscode-focusBorder);
+            border-color: var(--vscode-focusBorder);
+        }
+
+        .button {
+            padding: 8px 16px;
+            background: var(--vscode-button-background);
+            color: var(--vscode-button-foreground);
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+
+        .button:hover {
+            background: var(--vscode-button-hoverBackground);
+        }
+
+        .button-secondary {
+            background: var(--vscode-button-secondaryBackground);
+            color: var(--vscode-button-secondaryForeground);
+        }
+
+        .button-secondary:hover {
+            background: var(--vscode-button-secondaryHoverBackground);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .status {
+            padding: 10px 14px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            font-size: 13px;
+            display: none;
+        }
+
+        .status.success {
+            background: var(--vscode-testing-iconPassed);
+            color: var(--vscode-editor-background);
+            display: block;
+        }
+
+        .status.error {
+            background: var(--vscode-errorForeground);
+            color: var(--vscode-editor-background);
+            display: block;
+        }
+
+        .status.info {
+            background: var(--vscode-notificationsInfoIcon-foreground);
+            color: var(--vscode-editor-background);
+            display: block;
+        }
+
+        .hint {
+            font-size: 12px;
+            color: var(--vscode-descriptionForeground);
+            margin-top: 6px;
+            display: flex;
+            align-items: start;
+            gap: 6px;
+        }
+
+        .hint::before {
+            content: '💡';
+            font-size: 14px;
+        }
+
+        .current-value {
+            font-size: 12px;
+            color: var(--vscode-descriptionForeground);
+            margin-top: 4px;
+            font-family: var(--vscode-editor-font-family);
+        }
+
+        .masked-key {
+            font-family: monospace;
+            background: var(--vscode-editor-background);
+            padding: 2px 6px;
+            border-radius: 3px;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+
+        .model-info {
+            background: var(--vscode-textBlockQuote-background);
+            border-left: 3px solid var(--vscode-textLink-foreground);
+            padding: 12px;
+            margin-top: 10px;
+            font-size: 12px;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>⚙️ REST API Documentation Settings</h1>
+        <p class="subtitle">Configure your API documentation generator</p>
+
+        <div id="statusMessage" class="status"></div>
+
+        <!-- API Configuration -->
+        <div class="section">
+            <div class="section-title">🔑 OpenRouter API Configuration</div>
+
+            <div class="form-group">
+                <label>
+                    API Key
+                    <div class="label-description">Your OpenRouter API key for AI-powered documentation</div>
+                </label>
+                <input type="password" id="apiKey" placeholder="sk-or-v1-...">
+                <div class="current-value" id="currentApiKey"></div>
+                <div class="hint">Get your API key from <a href="https://openrouter.ai" style="color: var(--vscode-textLink-foreground);">openrouter.ai</a></div>
+            </div>
+
+            <div class="form-group">
+                <label>
+                    AI Model
+                    <div class="label-description">Select the AI model for documentation generation</div>
+                </label>
+                <select id="aiModel">
+                    <option value="google/gemma-3-12b-it:free">Gemma 3 12B (Free) - Recommended</option>
+                    <option value="google/gemma-3-27b-it:free">Gemma 3 27B (Free) - More Powerful</option>
+                    <option value="google/gemma-3-4b-it:free">Gemma 3 4B (Free) - Faster</option>
+                </select>
+                <div class="model-info" id="modelInfo"></div>
+            </div>
+
+            <div class="button-group">
+                <button class="button" id="testConnection">Test Connection</button>
+                <button class="button button-secondary" id="viewModels">View Available Models</button>
+            </div>
+        </div>
+
+        <!-- Project Configuration -->
+        <div class="section">
+            <div class="section-title">📦 Project Configuration</div>
+
+            <div class="form-group">
+                <label>
+                    Default API Title
+                    <div class="label-description">Default title for generated documentation</div>
+                </label>
+                <input type="text" id="apiTitle" placeholder="My REST API">
+            </div>
+
+            <div class="form-group">
+                <label>
+                    Default API Version
+                    <div class="label-description">Default version for generated documentation</div>
+                </label>
+                <input type="text" id="apiVersion" placeholder="1.0.0">
+            </div>
+
+            <div class="form-group">
+                <label>
+                    Default Server URL
+                    <div class="label-description">Default server URL for API endpoints</div>
+                </label>
+                <input type="text" id="serverUrl" placeholder="http://localhost:3000">
+            </div>
+        </div>
+
+        <!-- Generation Options -->
+        <div class="section">
+            <div class="section-title">⚡ Generation Options</div>
+
+            <div class="checkbox-group">
+                <input type="checkbox" id="autoValidate" checked>
+                <label for="autoValidate" style="margin-bottom: 0;">
+                    Auto-validate generated documentation
+                </label>
+            </div>
+
+            <div class="checkbox-group">
+                <input type="checkbox" id="generateBoth" checked>
+                <label for="generateBoth" style="margin-bottom: 0;">
+                    Generate both YAML and JSON formats
+                </label>
+            </div>
+
+            <div class="checkbox-group">
+                <input type="checkbox" id="extractSchemas" checked>
+                <label for="extractSchemas" style="margin-bottom: 0;">
+                    Extract reusable schemas to components
+                </label>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="button-group">
+            <button class="button" id="saveSettings">💾 Save Settings</button>
+            <button class="button button-secondary" id="resetSettings">🔄 Reset to Defaults</button>
+        </div>
+    </div>
+
+    <script>
+        const vscode = acquireVsCodeApi();
+
+        // Load settings when page loads
+        window.addEventListener('load', () => {
+            vscode.postMessage({ command: 'loadSettings' });
+        });
+
+        // Handle messages from extension
+        window.addEventListener('message', event => {
+            const message = event.data;
+
+            switch (message.command) {
+                case 'settingsLoaded':
+                    populateSettings(message.settings);
+                    break;
+                case 'showStatus':
+                    showStatus(message.type, message.message);
+                    break;
+            }
+        });
+
+        function populateSettings(settings) {
+            if (settings.apiKey) {
+                const masked = settings.apiKey.substring(0, 15) + '...';
+                document.getElementById('currentApiKey').textContent = `Current: ${masked}`;
+            }
+            
+            if (settings.aiModel) {
+                document.getElementById('aiModel').value = settings.aiModel;
+                updateModelInfo(settings.aiModel);
+            }
+
+            document.getElementById('apiTitle').value = settings.apiTitle || 'REST API Documentation';
+            document.getElementById('apiVersion').value = settings.apiVersion || '1.0.0';
+            document.getElementById('serverUrl').value = settings.serverUrl || 'http://localhost:3000';
+            document.getElementById('autoValidate').checked = settings.autoValidate !== false;
+            document.getElementById('generateBoth').checked = settings.generateBoth !== false;
+            document.getElementById('extractSchemas').checked = settings.extractSchemas !== false;
+        }
+
+        function updateModelInfo(model) {
+            const info = document.getElementById('modelInfo');
+            const modelDetails = {
+                'google/gemma-3-12b-it:free': '12B parameters | 32K context | Balanced performance',
+                'google/gemma-3-27b-it:free': '27B parameters | 131K context | Highest quality',
+                'google/gemma-3-4b-it:free': '4B parameters | 32K context | Fastest generation'
+            };
+            info.textContent = modelDetails[model] || '';
+        }
+
+        // Event listeners
+        document.getElementById('aiModel').addEventListener('change', (e) => {
+            updateModelInfo(e.target.value);
+        });
+
+        document.getElementById('saveSettings').addEventListener('click', () => {
+            const settings = {
+                apiKey: document.getElementById('apiKey').value || null,
+                aiModel: document.getElementById('aiModel').value,
+                apiTitle: document.getElementById('apiTitle').value,
+                apiVersion: document.getElementById('apiVersion').value,
+                serverUrl: document.getElementById('serverUrl').value,
+                autoValidate: document.getElementById('autoValidate').checked,
+                generateBoth: document.getElementById('generateBoth').checked,
+                extractSchemas: document.getElementById('extractSchemas').checked
+            };
+
+            vscode.postMessage({ command: 'saveSettings', settings });
+        });
+
+        document.getElementById('testConnection').addEventListener('click', () => {
+            vscode.postMessage({ command: 'testConnection' });
+        });
+
+        document.getElementById('viewModels').addEventListener('click', () => {
+            vscode.postMessage({ command: 'viewModels' });
+        });
+
+        document.getElementById('resetSettings').addEventListener('click', () => {
+            if (confirm('Reset all settings to defaults?')) {
+                vscode.postMessage({ command: 'resetSettings' });
+            }
+        });
+
+        function showStatus(type, message) {
+            const status = document.getElementById('statusMessage');
+            status.className = `status ${type}`;
+            status.textContent = message;
+
+            setTimeout(() => {
+                status.className = 'status';
+            }, 5000);
+        }
+    </script>
+</body>
+</html>

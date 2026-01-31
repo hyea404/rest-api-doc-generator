@@ -56,8 +56,57 @@
       {
         "command": "rest-api-doc-generator.validateDocs",
         "title": "REST API Docs: Validate OpenAPI Document"
+      },
+      {
+            "command": "rest-api-doc-generator.openSettings",
+            "title": "REST API Docs: Open Settings"
       }
-    ]
+    ],
+    "configuration": {
+        "title": "REST API Documentation Generator",
+        "properties": {
+            "restApiDocs.aiModel": {
+                "type": "string",
+                "default": "google/gemma-3-12b-it:free",
+                "description": "AI model for documentation generation",
+                "enum": [
+                    "google/gemma-3-12b-it:free",
+                    "google/gemma-3-27b-it:free",
+                    "google/gemma-3-4b-it:free"
+                ]
+            },
+            "restApiDocs.apiTitle": {
+                "type": "string",
+                "default": "REST API Documentation",
+                "description": "Default title for generated documentation"
+            },
+            "restApiDocs.apiVersion": {
+                "type": "string",
+                "default": "1.0.0",
+                "description": "Default version for generated documentation"
+            },
+            "restApiDocs.serverUrl": {
+                "type": "string",
+                "default": "http://localhost:3000",
+                "description": "Default server URL for API endpoints"
+            },
+            "restApiDocs.autoValidate": {
+                "type": "boolean",
+                "default": true,
+                "description": "Automatically validate generated documentation"
+            },
+            "restApiDocs.generateBoth": {
+                "type": "boolean",
+                "default": true,
+                "description": "Generate both YAML and JSON formats"
+            },
+            "restApiDocs.extractSchemas": {
+                "type": "boolean",
+                "default": true,
+                "description": "Extract reusable schemas to components"
+            }
+        }
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run package",

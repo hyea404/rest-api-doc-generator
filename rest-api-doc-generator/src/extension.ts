@@ -5,11 +5,13 @@ import { OpenRouterClient } from './services/OpenRouterClient';
 import { RouteInfo, HttpMethod } from './types/RouteInfo';
 import { DocumentationService } from './services/DocumentationService';
 import { ValidationService } from './services/ValidationService';
+import { SettingsPanelProvider } from './services/SettingsPanelProvider';
 import * as path from 'path';
 import * as fs from 'fs'; 
 
 
 let storageService: SecureStorageService;
+let settingsPanelProvider: SettingsPanelProvider;
 
 export function activate(context: vscode.ExtensionContext) {
     console.log('🚀 REST API Doc Generator is now active!');
@@ -525,8 +527,18 @@ export function activate(context: vscode.ExtensionContext) {
         }
     );
 
+    // Initialize settings panel provider
+    settingsPanelProvider = new SettingsPanelProvider(context, storageService);
 
-    context.subscriptions.push(setApiKeyCommand, checkApiKeyCommand, deleteApiKeyCommand, scanRoutesCommand, testConnectionCommand, testPromptCommand,listModelsCommand, generateDocsCommand, generateDocsQuickCommand, validateDocsCommand);
+    // Command: Open Settings Panel
+    let openSettingsCommand = vscode.commands.registerCommand(
+        'rest-api-doc-generator.openSettings',
+        async () => {
+            await settingsPanelProvider.show();
+        }
+    );
+
+    context.subscriptions.push(setApiKeyCommand, checkApiKeyCommand, deleteApiKeyCommand, scanRoutesCommand, testConnectionCommand, testPromptCommand,listModelsCommand, generateDocsCommand, generateDocsQuickCommand, validateDocsCommand, openSettingsCommand);
 }
 
 export function deactivate() {
