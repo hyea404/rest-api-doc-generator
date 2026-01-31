@@ -5,6 +5,7 @@ import { ParserService } from './ParserService';
 import { OpenRouterClient } from './OpenRouterClient';
 import { OpenAPIGenerator } from '../generators/OpenAPIGenerator';
 import { RouteInfo } from '../types/RouteInfo';
+import { ValidationService } from './ValidationService';
 
 /**
  * DocumentationService - Orchestrate documentation generation process
@@ -90,18 +91,38 @@ export class DocumentationService {
             // Step 5: Set server info (nomor step berubah jadi 5)
             generator.setServer('http://localhost:3000', 'Development server');
 
-            // Step 6: Generate YAML and JSON (nomor step berubah jadi 6)
+            // Step 6: Generate YAML and JSON
             const yamlContent = generator.toYAML();
             const jsonContent = generator.toJSON();
 
-            // Step 7: Write to files
+            // Step 7: Validate generated document
+            console.log('🔍 Validating generated documentation...');
+            const validationService = new ValidationService();
+            const validationResult = validationService.validateDocument(generator.getDocument());
+
+            if (!validationResult.isValid) {
+                console.warn('⚠️ Validation found errors:', validationResult.errors);
+                vscode.window.showWarningMessage(
+                    `⚠️ Documentation generated but has ${validationResult.errors.length} validation errors. Check output for details.`
+                );
+            } else if (validationResult.warnings.length > 0) {
+                console.log('ℹ️ Validation warnings:', validationResult.warnings);
+            }
+
+            // Step 8: Write to files
             const yamlPath = path.join(this.workspaceRoot, 'openapi.yaml');
             const jsonPath = path.join(this.workspaceRoot, 'openapi.json');
 
             await fs.promises.writeFile(yamlPath, yamlContent, 'utf-8');
             await fs.promises.writeFile(jsonPath, jsonContent, 'utf-8');
 
+            // Write validation report
+            const reportPath = path.join(this.workspaceRoot, 'validation-report.txt');
+            const report = validationService.generateReport(validationResult);
+            await fs.promises.writeFile(reportPath, report, 'utf-8');
+
             console.log('✅ Documentation files created');
+            console.log('✅ Validation report created');
 
             return { yamlPath, jsonPath };
 

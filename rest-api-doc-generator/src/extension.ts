@@ -4,7 +4,10 @@ import { ParserService } from './services/ParserService';
 import { OpenRouterClient } from './services/OpenRouterClient';
 import { RouteInfo, HttpMethod } from './types/RouteInfo';
 import { DocumentationService } from './services/DocumentationService';
+import { ValidationService } from './services/ValidationService';
 import * as path from 'path';
+import * as fs from 'fs'; 
+
 
 let storageService: SecureStorageService;
 
@@ -453,7 +456,77 @@ export function activate(context: vscode.ExtensionContext) {
         }
     );
 
-    context.subscriptions.push(setApiKeyCommand, checkApiKeyCommand, deleteApiKeyCommand, scanRoutesCommand, testConnectionCommand, testPromptCommand,listModelsCommand, generateDocsCommand, generateDocsQuickCommand);
+    // Command: Validate OpenAPI Document
+    let validateDocsCommand = vscode.commands.registerCommand(
+        'rest-api-doc-generator.validateDocs',
+        async () => {
+            try {
+                const workspaceFolders = vscode.workspace.workspaceFolders;
+                if (!workspaceFolders || workspaceFolders.length === 0) {
+                    vscode.window.showErrorMessage('❌ No workspace folder open');
+                    return;
+                }
+
+                const workspaceRoot = workspaceFolders[0].uri.fsPath;
+
+                // Ask user which file to validate
+                const fileChoice = await vscode.window.showQuickPick(
+                    ['openapi.yaml', 'openapi.json'],
+                    {
+                        placeHolder: 'Select file to validate'
+                    }
+                );
+
+                if (!fileChoice) {
+                    return;
+                }
+
+                const filePath = path.join(workspaceRoot, fileChoice);
+
+                // Check if file exists
+                if (!fs.existsSync(filePath)) {
+                    vscode.window.showErrorMessage(`❌ File not found: ${fileChoice}`);
+                    return;
+                }
+
+                vscode.window.showInformationMessage('🔍 Validating OpenAPI document...');
+
+                // Validate
+                const validationService = new ValidationService();
+                const result = await validationService.validateFile(filePath);
+
+                // Generate and show report
+                const report = validationService.generateReport(result);
+                
+                const outputChannel = vscode.window.createOutputChannel('OpenAPI Validation');
+                outputChannel.clear();
+                outputChannel.appendLine(report);
+                outputChannel.show();
+
+                // Show message
+                if (result.isValid) {
+                    if (result.warnings.length > 0) {
+                        vscode.window.showInformationMessage(
+                            `✅ Document is valid with ${result.warnings.length} warning(s). Check output for details.`
+                        );
+                    } else {
+                        vscode.window.showInformationMessage('✅ Document is perfectly valid!');
+                    }
+                } else {
+                    vscode.window.showErrorMessage(
+                        `❌ Validation failed with ${result.errors.length} error(s). Check output for details.`
+                    );
+                }
+
+            } catch (error: any) {
+                console.error('❌ Validation error:', error);
+                vscode.window.showErrorMessage(`❌ Validation failed: ${error.message}`);
+            }
+        }
+    );
+
+
+    context.subscriptions.push(setApiKeyCommand, checkApiKeyCommand, deleteApiKeyCommand, scanRoutesCommand, testConnectionCommand, testPromptCommand,listModelsCommand, generateDocsCommand, generateDocsQuickCommand, validateDocsCommand);
 }
 
 export function deactivate() {

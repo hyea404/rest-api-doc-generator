@@ -50,8 +50,12 @@
         "title": "REST API Docs: Generate Documentation (AI-Powered)"
       },
       {
-          "command": "rest-api-doc-generator.generateDocsQuick",
-          "title": "REST API Docs: Generate Documentation (Quick)"
+        "command": "rest-api-doc-generator.generateDocsQuick",
+        "title": "REST API Docs: Generate Documentation (Quick)"
+      },
+      {
+        "command": "rest-api-doc-generator.validateDocs",
+        "title": "REST API Docs: Validate OpenAPI Document"
       }
     ]
   },
@@ -89,6 +93,7 @@
     "@babel/traverse": "^7.28.6",
     "@babel/types": "^7.28.6",
     "axios": "^1.13.2",
-    "js-yaml": "^4.1.1"
+    "js-yaml": "^4.1.1",
+    "openapi-schema-validator": "^12.1.3"
   }
 }
