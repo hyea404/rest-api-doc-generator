@@ -3,6 +3,8 @@ import { SecureStorageService } from './services/SecureStorageService';
 import { ParserService } from './services/ParserService';
 import { OpenRouterClient } from './services/OpenRouterClient';
 import { RouteInfo, HttpMethod } from './types/RouteInfo';
+import { DocumentationService } from './services/DocumentationService';
+import * as path from 'path';
 
 let storageService: SecureStorageService;
 
@@ -323,10 +325,135 @@ export function activate(context: vscode.ExtensionContext) {
         }
     );
 
-    context.subscriptions.push(listModelsCommand);
+    // Command: Generate API Documentation (Full with AI)
+    let generateDocsCommand = vscode.commands.registerCommand(
+        'rest-api-doc-generator.generateDocs',
+        async () => {
+            try {
+                // Check workspace
+                const workspaceFolders = vscode.workspace.workspaceFolders;
+                if (!workspaceFolders || workspaceFolders.length === 0) {
+                    vscode.window.showErrorMessage('❌ No workspace folder open');
+                    return;
+                }
 
+                // Get API key
+                const apiKey = await storageService.getApiKey();
+                if (!apiKey) {
+                    vscode.window.showWarningMessage(
+                        '⚠️ API key not set. Please set your OpenRouter API key first.'
+                    );
+                    return;
+                }
 
-    context.subscriptions.push(setApiKeyCommand, checkApiKeyCommand, deleteApiKeyCommand, scanRoutesCommand, testConnectionCommand, testPromptCommand);
+                const workspaceRoot = workspaceFolders[0].uri.fsPath;
+
+                // Ask for project info
+                const projectName = await vscode.window.showInputBox({
+                    prompt: 'Enter API project name',
+                    placeHolder: 'My REST API',
+                    value: 'REST API Documentation'
+                });
+
+                if (!projectName) {
+                    return;
+                }
+
+                const projectVersion = await vscode.window.showInputBox({
+                    prompt: 'Enter API version',
+                    placeHolder: '1.0.0',
+                    value: '1.0.0'
+                });
+
+                if (!projectVersion) {
+                    return;
+                }
+
+                // Create documentation service
+                const docService = new DocumentationService(workspaceRoot, apiKey);
+
+                // Generate documentation
+                vscode.window.showInformationMessage('🤖 Generating documentation with AI...');
+                
+                const result = await docService.generateDocumentation(
+                    projectName,
+                    projectVersion
+                );
+
+                // Show success message
+                const openYaml = await vscode.window.showInformationMessage(
+                    `✅ Documentation generated successfully!\n\nFiles:\n- ${path.basename(result.yamlPath)}\n- ${path.basename(result.jsonPath)}`,
+                    'Open YAML',
+                    'Open JSON'
+                );
+
+                // Open file if user clicks button
+                if (openYaml === 'Open YAML') {
+                    const doc = await vscode.workspace.openTextDocument(result.yamlPath);
+                    await vscode.window.showTextDocument(doc);
+                } else if (openYaml === 'Open JSON') {
+                    const doc = await vscode.workspace.openTextDocument(result.jsonPath);
+                    await vscode.window.showTextDocument(doc);
+                }
+
+            } catch (error: any) {
+                console.error('❌ Generate docs error:', error);
+                vscode.window.showErrorMessage(`❌ Failed to generate documentation: ${error.message}`);
+            }
+        }
+    );
+
+    // Command: Generate API Documentation (Quick without AI)
+    let generateDocsQuickCommand = vscode.commands.registerCommand(
+        'rest-api-doc-generator.generateDocsQuick',
+        async () => {
+            try {
+                const workspaceFolders = vscode.workspace.workspaceFolders;
+                if (!workspaceFolders || workspaceFolders.length === 0) {
+                    vscode.window.showErrorMessage('❌ No workspace folder open');
+                    return;
+                }
+
+                const workspaceRoot = workspaceFolders[0].uri.fsPath;
+
+                // Get API key (still needed for service initialization)
+                const apiKey = await storageService.getApiKey();
+                if (!apiKey) {
+                    // Create dummy service for quick generation
+                    vscode.window.showWarningMessage('⚠️ Generating without AI (basic documentation)');
+                }
+
+                const docService = new DocumentationService(
+                    workspaceRoot, 
+                    apiKey || 'dummy-key'
+                );
+
+                vscode.window.showInformationMessage('⚡ Quick generating documentation...');
+
+                const result = await docService.generateQuick();
+
+                const openFile = await vscode.window.showInformationMessage(
+                    `✅ Quick documentation generated!\n\nFiles:\n- ${path.basename(result.yamlPath)}\n- ${path.basename(result.jsonPath)}`,
+                    'Open YAML',
+                    'Open JSON'
+                );
+
+                if (openFile === 'Open YAML') {
+                    const doc = await vscode.workspace.openTextDocument(result.yamlPath);
+                    await vscode.window.showTextDocument(doc);
+                } else if (openFile === 'Open JSON') {
+                    const doc = await vscode.workspace.openTextDocument(result.jsonPath);
+                    await vscode.window.showTextDocument(doc);
+                }
+
+            } catch (error: any) {
+                console.error('❌ Quick generate error:', error);
+                vscode.window.showErrorMessage(`❌ Failed: ${error.message}`);
+            }
+        }
+    );
+
+    context.subscriptions.push(setApiKeyCommand, checkApiKeyCommand, deleteApiKeyCommand, scanRoutesCommand, testConnectionCommand, testPromptCommand,listModelsCommand, generateDocsCommand, generateDocsQuickCommand);
 }
 
 export function deactivate() {

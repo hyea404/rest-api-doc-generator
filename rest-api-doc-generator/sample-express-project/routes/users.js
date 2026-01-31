@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 
 // GET /users - Get all users
-router.get('/', async (req, res) => {
+router.get('/users', async (req, res) => {
     try {
         const users = await getAllUsers();
         res.status(200).json(users);
@@ -12,7 +12,7 @@ router.get('/', async (req, res) => {
 });
 
 // GET /users/:id - Get user by ID
-router.get('/:id', async (req, res) => {
+router.get('/users/:id', async (req, res) => {
     try {
         const user = await getUserById(req.params.id);
         if (!user) {
@@ -25,7 +25,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // POST /users - Create new user
-router.post('/', validateUser, async (req, res) => {
+router.post('/users', validateUser, async (req, res) => {
     try {
         const newUser = await createUser(req.body);
         res.status(201).json(newUser);
@@ -35,7 +35,7 @@ router.post('/', validateUser, async (req, res) => {
 });
 
 // PUT /users/:id - Update user
-router.put('/:id', authenticateUser, async (req, res) => {
+router.put('/users/:id', authenticateUser, async (req, res) => {
     try {
         const updatedUser = await updateUser(req.params.id, req.body);
         res.status(200).json(updatedUser);
@@ -45,7 +45,7 @@ router.put('/:id', authenticateUser, async (req, res) => {
 });
 
 // DELETE /users/:id - Delete user
-router.delete('/:id', authenticateUser, authorizeAdmin, async (req, res) => {
+router.delete('/users/:id', authenticateUser, authorizeAdmin, async (req, res) => {
     try {
         await deleteUser(req.params.id);
         res.status(204).send();

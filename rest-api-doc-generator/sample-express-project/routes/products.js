@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 
 // GET /products - Get all products with pagination
-router.get('/', async (req, res) => {
+router.get('/products', async (req, res) => {
     const { page, limit, category } = req.query;
     try {
         const products = await getProducts({ page, limit, category });
@@ -13,7 +13,7 @@ router.get('/', async (req, res) => {
 });
 
 // GET /products/:id - Get product by ID
-router.get('/:id', async (req, res) => {
+router.get('/products/:id', async (req, res) => {
     try {
         const product = await getProductById(req.params.id);
         res.json(product);
@@ -23,7 +23,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // POST /products - Create product
-router.post('/', authenticateUser, validateProduct, async (req, res) => {
+router.post('/products', authenticateUser, validateProduct, async (req, res) => {
     try {
         const product = await createProduct(req.body);
         res.status(201).json(product);
@@ -33,7 +33,7 @@ router.post('/', authenticateUser, validateProduct, async (req, res) => {
 });
 
 // PATCH /products/:id - Partial update
-router.patch('/:id', authenticateUser, async (req, res) => {
+router.patch('/products/:id', authenticateUser, async (req, res) => {
     try {
         const updated = await updateProduct(req.params.id, req.body);
         res.json(updated);

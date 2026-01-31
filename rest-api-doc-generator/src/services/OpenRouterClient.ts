@@ -11,7 +11,7 @@ export class OpenRouterClient {
     private baseURL: string = 'https://openrouter.ai/api/v1';
     private model: string = 'google/gemma-3-12b-it:free';
     private client: AxiosInstance;
-    private timeout: number = 30000; // 30 seconds (NF1: should be < 30s for actual inference)
+    private timeout: number = 60000; // 60 seconds (NF1: should be <= 60s for actual inference)
     private maxRetries: number = 3;
 
     constructor(apiKey: string, model?: string) {

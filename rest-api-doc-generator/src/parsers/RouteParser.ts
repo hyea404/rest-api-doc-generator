@@ -24,7 +24,7 @@ export class RouteParser {
             // Traverse AST untuk find route definitions
             traverse(ast, {
                 // Detect: router.get(), router.post(), dll
-                CallExpression: (path) => {
+                CallExpression: (path: any) => {
                     const node = path.node;
                     
                     // Check if it's a router/app method call
