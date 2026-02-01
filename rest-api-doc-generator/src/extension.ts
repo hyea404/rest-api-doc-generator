@@ -6,18 +6,33 @@ import { RouteInfo, HttpMethod } from './types/RouteInfo';
 import { DocumentationService } from './services/DocumentationService';
 import { ValidationService } from './services/ValidationService';
 import { SettingsPanelProvider } from './services/SettingsPanelProvider';
+import { PreviewPanelProvider } from './services/PreviewPanelProvider';
 import * as path from 'path';
 import * as fs from 'fs'; 
 
 
 let storageService: SecureStorageService;
 let settingsPanelProvider: SettingsPanelProvider;
+// Create preview panel provider
+let previewPanelProvider: PreviewPanelProvider;
+
 
 export function activate(context: vscode.ExtensionContext) {
     console.log('🚀 REST API Doc Generator is now active!');
 
     // Initialize SecureStorageService
     storageService = new SecureStorageService(context);
+    // Initialize settings panel provider
+    settingsPanelProvider = new SettingsPanelProvider(context, storageService);
+
+    // Initialize preview panel provider
+    const workspaceFolders = vscode.workspace.workspaceFolders;
+    if (workspaceFolders && workspaceFolders.length > 0) {
+        previewPanelProvider = new PreviewPanelProvider(
+            context, 
+            workspaceFolders[0].uri.fsPath
+        );
+    }
 
     // Command: Set API Key
     let setApiKeyCommand = vscode.commands.registerCommand(
@@ -386,19 +401,22 @@ export function activate(context: vscode.ExtensionContext) {
                 );
 
                 // Show success message
-                const openYaml = await vscode.window.showInformationMessage(
+                const action = await vscode.window.showInformationMessage(
                     `✅ Documentation generated successfully!\n\nFiles:\n- ${path.basename(result.yamlPath)}\n- ${path.basename(result.jsonPath)}`,
                     'Open YAML',
-                    'Open JSON'
+                    'Open JSON',
+                    'Preview' // ADD THIS
                 );
 
                 // Open file if user clicks button
-                if (openYaml === 'Open YAML') {
+                if (action === 'Open YAML') {
                     const doc = await vscode.workspace.openTextDocument(result.yamlPath);
                     await vscode.window.showTextDocument(doc);
-                } else if (openYaml === 'Open JSON') {
+                } else if (action === 'Open JSON') {
                     const doc = await vscode.workspace.openTextDocument(result.jsonPath);
                     await vscode.window.showTextDocument(doc);
+                } else if (action === 'Preview') { // ADD THIS
+                    await vscode.commands.executeCommand('rest-api-doc-generator.previewDocs');
                 }
 
             } catch (error: any) {
@@ -437,18 +455,23 @@ export function activate(context: vscode.ExtensionContext) {
 
                 const result = await docService.generateQuick();
 
-                const openFile = await vscode.window.showInformationMessage(
-                    `✅ Quick documentation generated!\n\nFiles:\n- ${path.basename(result.yamlPath)}\n- ${path.basename(result.jsonPath)}`,
+                // Show success message
+                const action = await vscode.window.showInformationMessage(
+                    `✅ Documentation generated successfully!\n\nFiles:\n- ${path.basename(result.yamlPath)}\n- ${path.basename(result.jsonPath)}`,
                     'Open YAML',
-                    'Open JSON'
+                    'Open JSON',
+                    'Preview' // ADD THIS
                 );
 
-                if (openFile === 'Open YAML') {
+                // Open file if user clicks button
+                if (action === 'Open YAML') {
                     const doc = await vscode.workspace.openTextDocument(result.yamlPath);
                     await vscode.window.showTextDocument(doc);
-                } else if (openFile === 'Open JSON') {
+                } else if (action === 'Open JSON') {
                     const doc = await vscode.workspace.openTextDocument(result.jsonPath);
                     await vscode.window.showTextDocument(doc);
+                } else if (action === 'Preview') { // ADD THIS
+                    await vscode.commands.executeCommand('rest-api-doc-generator.previewDocs');
                 }
 
             } catch (error: any) {
@@ -538,7 +561,54 @@ export function activate(context: vscode.ExtensionContext) {
         }
     );
 
-    context.subscriptions.push(setApiKeyCommand, checkApiKeyCommand, deleteApiKeyCommand, scanRoutesCommand, testConnectionCommand, testPromptCommand,listModelsCommand, generateDocsCommand, generateDocsQuickCommand, validateDocsCommand, openSettingsCommand);
+    // Command: Preview API Documentation
+    let previewDocsCommand = vscode.commands.registerCommand(
+        'rest-api-doc-generator.previewDocs',
+        async () => {
+            try {
+                const workspaceFolders = vscode.workspace.workspaceFolders;
+                if (!workspaceFolders || workspaceFolders.length === 0) {
+                    vscode.window.showErrorMessage('❌ No workspace folder open');
+                    return;
+                }
+
+                // Check if documentation exists
+                const workspaceRoot = workspaceFolders[0].uri.fsPath;
+                const yamlPath = path.join(workspaceRoot, 'openapi.yaml');
+                const jsonPath = path.join(workspaceRoot, 'openapi.json');
+
+                if (!fs.existsSync(yamlPath) && !fs.existsSync(jsonPath)) {
+                    const generate = await vscode.window.showWarningMessage(
+                        '⚠️ No OpenAPI documentation found. Would you like to generate it?',
+                        'Generate Now',
+                        'Cancel'
+                    );
+
+                    if (generate === 'Generate Now') {
+                        // Trigger generation command
+                        await vscode.commands.executeCommand('rest-api-doc-generator.generateDocsQuick');
+                        
+                        // Wait a bit for generation to complete
+                        await new Promise(resolve => setTimeout(resolve, 1000));
+                    }
+                }
+
+                // Show preview
+                if (!previewPanelProvider) {
+                    previewPanelProvider = new PreviewPanelProvider(context, workspaceRoot);
+                }
+
+                await previewPanelProvider.show();
+
+            } catch (error: any) {
+                console.error('❌ Preview error:', error);
+                vscode.window.showErrorMessage(`❌ Failed to show preview: ${error.message}`);
+            }
+        }
+    );
+
+
+    context.subscriptions.push(setApiKeyCommand, checkApiKeyCommand, deleteApiKeyCommand, scanRoutesCommand, testConnectionCommand, testPromptCommand,listModelsCommand, generateDocsCommand, generateDocsQuickCommand, validateDocsCommand, openSettingsCommand, previewDocsCommand);
 }
 
 export function deactivate() {

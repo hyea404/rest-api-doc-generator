@@ -3,232 +3,45 @@
   "info": {
     "title": "REST API Documentation",
     "version": "1.0.0",
-    "description": "Auto-generated API documentation"
+    "description": "Auto-generated API documentation using AI"
   },
   "servers": [
     {
       "url": "http://localhost:3000",
-      "description": "API Server"
+      "description": "Development server"
     }
   ],
   "paths": {
-    "/products": {
-      "get": {
-        "summary": "Get Products",
-        "description": "GET operation for /products",
-        "operationId": "getProducts",
-        "tags": [
-          "Products"
-        ],
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "Success",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Internal Server Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "unknown"
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      },
-      "post": {
-        "summary": "Create Products",
-        "description": "POST operation for /products",
-        "operationId": "postProducts",
-        "tags": [
-          "Products"
-        ],
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
-          },
-          "201": {
-            "description": "Created",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "unknown"
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/products/{id}": {
-      "get": {
-        "summary": "Get Products",
-        "description": "GET operation for /products/:id",
-        "operationId": "getProductsById",
-        "tags": [
-          "Products"
-        ],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "description": "id parameter",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string"
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      },
-      "patch": {
-        "summary": "Update Products",
-        "description": "PATCH operation for /products/:id",
-        "operationId": "patchProductsById",
-        "tags": [
-          "Products"
-        ],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "description": "id parameter",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "unknown"
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/users": {
       "get": {
-        "summary": "Get Users",
-        "description": "GET operation for /users",
+        "summary": "Get all users",
+        "description": "Retrieve a list of all users.",
         "operationId": "getUsers",
         "tags": [
           "Users"
         ],
-        "parameters": [],
         "responses": {
           "200": {
-            "description": "Success",
+            "description": "Successful operation",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string"
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "description": "User ID"
+                      },
+                      "name": {
+                        "type": "string",
+                        "description": "User Name"
+                      },
+                      "email": {
+                        "type": "string",
+                        "description": "User Email"
+                      }
                     }
                   }
                 }
@@ -242,8 +55,9 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "message": {
-                      "type": "unknown"
+                    "error": {
+                      "type": "string",
+                      "description": "Error message"
                     }
                   }
                 }
@@ -253,33 +67,56 @@
         }
       },
       "post": {
-        "summary": "Create Users",
-        "description": "POST operation for /users",
-        "operationId": "postUsers",
+        "summary": "Create a new user",
+        "description": "Creates a new user record.",
+        "operationId": "createUser",
         "tags": [
           "Users"
         ],
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "User's name"
+                  },
+                  "email": {
+                    "type": "string",
+                    "description": "User's email address",
+                    "format": "email"
+                  }
+                },
+                "required": [
+                  "name",
+                  "email"
+                ]
               }
             }
-          },
+          }
+        },
+        "responses": {
           "201": {
-            "description": "Created",
+            "description": "User created successfully",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "message": {
-                      "type": "string"
+                    "id": {
+                      "type": "string",
+                      "description": "The newly created user's ID"
+                    },
+                    "name": {
+                      "type": "string",
+                      "description": "User's name"
+                    },
+                    "email": {
+                      "type": "string",
+                      "description": "User's email address"
                     }
                   }
                 }
@@ -287,14 +124,15 @@
             }
           },
           "400": {
-            "description": "Bad Request",
+            "description": "Bad Request - Invalid input",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
                   "properties": {
                     "message": {
-                      "type": "unknown"
+                      "type": "string",
+                      "description": "Error message describing the validation failure"
                     }
                   }
                 }
@@ -306,9 +144,9 @@
     },
     "/users/{id}": {
       "get": {
-        "summary": "Get Users",
-        "description": "GET operation for /users/:id",
-        "operationId": "getUsersById",
+        "summary": "Get user by ID",
+        "description": "Retrieve detailed information about a specific user.",
+        "operationId": "getUserById",
         "tags": [
           "Users"
         ],
@@ -316,8 +154,8 @@
           {
             "name": "id",
             "in": "path",
-            "description": "id parameter",
             "required": true,
+            "description": "User ID",
             "schema": {
               "type": "string"
             }
@@ -325,14 +163,23 @@
         ],
         "responses": {
           "200": {
-            "description": "Success",
+            "description": "Successful operation - user found",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "message": {
-                      "type": "string"
+                    "id": {
+                      "type": "string",
+                      "description": "The user's ID."
+                    },
+                    "name": {
+                      "type": "string",
+                      "description": "The user's name."
+                    },
+                    "email": {
+                      "type": "string",
+                      "description": "The user's email address."
                     }
                   }
                 }
@@ -340,14 +187,15 @@
             }
           },
           "404": {
-            "description": "Not Found",
+            "description": "User not found",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
                   "properties": {
                     "message": {
-                      "type": "string"
+                      "type": "string",
+                      "description": "Error message indicating user not found."
                     }
                   }
                 }
@@ -362,7 +210,8 @@
                   "type": "object",
                   "properties": {
                     "message": {
-                      "type": "unknown"
+                      "type": "string",
+                      "description": "Error message indicating an internal server error."
                     }
                   }
                 }
@@ -372,9 +221,9 @@
         }
       },
       "put": {
-        "summary": "Update Users",
-        "description": "PUT operation for /users/:id",
-        "operationId": "putUsersById",
+        "summary": "Update user by ID",
+        "description": "Update an existing user by their ID. Requires authentication.",
+        "operationId": "updateUserById",
         "tags": [
           "Users"
         ],
@@ -382,8 +231,268 @@
           {
             "name": "id",
             "in": "path",
-            "description": "id parameter",
             "required": true,
+            "description": "User ID to update",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "description": "The ID of the updated user"
+                    },
+                    "name": {
+                      "type": "string",
+                      "description": "The updated user's name"
+                    },
+                    "email": {
+                      "type": "string",
+                      "description": "The updated user's email"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request - Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "description": "Error message describing the invalid input"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete a user by ID",
+        "description": "Delete a user from the system. Requires admin privileges.",
+        "operationId": "deleteUserById",
+        "tags": [
+          "Users"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "User ID to delete",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "User successfully deleted. No content returned."
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "description": "Error message"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/products": {
+      "get": {
+        "summary": "Get all products",
+        "description": "Retrieves a list of all products.",
+        "operationId": "getProducts",
+        "tags": [
+          "Products"
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "description": "Product ID"
+                      },
+                      "name": {
+                        "type": "string",
+                        "description": "Product Name"
+                      },
+                      "price": {
+                        "type": "number",
+                        "format": "float",
+                        "description": "Product Price"
+                      },
+                      "description": {
+                        "type": "string",
+                        "description": "Product Description"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Error message"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a new product",
+        "description": "Creates a new product in the system. Requires authentication and product validation.",
+        "operationId": "createProduct",
+        "tags": [
+          "Products"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "The name of the product"
+                  },
+                  "description": {
+                    "type": "string",
+                    "description": "A detailed description of the product"
+                  },
+                  "price": {
+                    "type": "number",
+                    "format": "float",
+                    "description": "The price of the product"
+                  },
+                  "category": {
+                    "type": "string",
+                    "description": "The category the product belongs to"
+                  }
+                },
+                "required": [
+                  "name",
+                  "price"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Product created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "description": "The ID of the newly created product"
+                    },
+                    "name": {
+                      "type": "string",
+                      "description": "The name of the product"
+                    },
+                    "description": {
+                      "type": "string",
+                      "description": "A detailed description of the product"
+                    },
+                    "price": {
+                      "type": "number",
+                      "format": "float",
+                      "description": "The price of the product"
+                    },
+                    "category": {
+                      "type": "string",
+                      "description": "The category the product belongs to"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request - Invalid product data or validation failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "description": "Error message describing the validation failure"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/products/{id}": {
+      "patch": {
+        "summary": "Update a product",
+        "description": "Updates an existing product by ID. Requires authentication.",
+        "operationId": "updateProduct",
+        "tags": [
+          "Products"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Product ID",
             "schema": {
               "type": "string"
             }
@@ -398,7 +507,8 @@
                   "type": "object",
                   "properties": {
                     "message": {
-                      "type": "string"
+                      "type": "string",
+                      "description": "Success message"
                     }
                   }
                 }
@@ -412,69 +522,9 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "message": {
-                      "type": "unknown"
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      },
-      "delete": {
-        "summary": "Delete Users",
-        "description": "DELETE operation for /users/:id",
-        "operationId": "deleteUsersById",
-        "tags": [
-          "Users"
-        ],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "description": "id parameter",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
-          },
-          "204": {
-            "description": "No Content",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Internal Server Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "unknown"
+                    "error": {
+                      "type": "string",
+                      "description": "Error message"
                     }
                   }
                 }
@@ -487,11 +537,55 @@
   },
   "components": {
     "schemas": {
+      "User": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The newly created user's ID"
+          },
+          "name": {
+            "type": "string",
+            "description": "User's name"
+          },
+          "email": {
+            "type": "string",
+            "description": "User's email address"
+          }
+        }
+      },
       "ErrorResponse": {
         "type": "object",
         "properties": {
           "message": {
-            "type": "string"
+            "type": "string",
+            "description": "Error message describing the validation failure"
+          }
+        }
+      },
+      "Product": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The ID of the newly created product"
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the product"
+          },
+          "description": {
+            "type": "string",
+            "description": "A detailed description of the product"
+          },
+          "price": {
+            "type": "number",
+            "format": "float",
+            "description": "The price of the product"
+          },
+          "category": {
+            "type": "string",
+            "description": "The category the product belongs to"
           }
         }
       }
@@ -499,12 +593,12 @@
   },
   "tags": [
     {
-      "name": "Products",
-      "description": "Products related endpoints"
-    },
-    {
       "name": "Users",
       "description": "Users related endpoints"
+    },
+    {
+      "name": "Products",
+      "description": "Products related endpoints"
     }
   ]
 }

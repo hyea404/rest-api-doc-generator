@@ -58,8 +58,13 @@
         "title": "REST API Docs: Validate OpenAPI Document"
       },
       {
-            "command": "rest-api-doc-generator.openSettings",
-            "title": "REST API Docs: Open Settings"
+        "command": "rest-api-doc-generator.openSettings",
+        "title": "REST API Docs: Open Settings"
+      },
+      {
+        "command": "rest-api-doc-generator.previewDocs",
+        "title": "REST API Docs: Preview Documentation",
+        "icon": "$(preview)"
       }
     ],
     "configuration": {
@@ -106,6 +111,15 @@
                 "description": "Extract reusable schemas to components"
             }
         }
+    },
+    "menus": {
+    "explorer/context": [
+        {
+            "command": "rest-api-doc-generator.previewDocs",
+            "when": "resourceFilename =~ /openapi\\.(yaml|yml|json)$/",
+            "group": "navigation"
+        }
+      ]
     }
   },
   "scripts": {

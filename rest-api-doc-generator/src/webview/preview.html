@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Documentation Preview</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.11.0/swagger-ui.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--vscode-font-family);
+            background-color: var(--vscode-editor-background);
+            overflow: hidden;
+        }
+
+        #header {
+            background: var(--vscode-editor-background);
+            border-bottom: 1px solid var(--vscode-panel-border);
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 50px;
+        }
+
+        #header h1 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--vscode-foreground);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .button {
+            padding: 6px 12px;
+            background: var(--vscode-button-background);
+            color: var(--vscode-button-foreground);
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .button:hover {
+            background: var(--vscode-button-hoverBackground);
+        }
+
+        .button-secondary {
+            background: var(--vscode-button-secondaryBackground);
+            color: var(--vscode-button-secondaryForeground);
+        }
+
+        .button-secondary:hover {
+            background: var(--vscode-button-secondaryHoverBackground);
+        }
+
+        .status {
+            font-size: 12px;
+            color: var(--vscode-descriptionForeground);
+            padding: 4px 8px;
+            background: var(--vscode-badge-background);
+            color: var(--vscode-badge-foreground);
+            border-radius: 10px;
+        }
+
+        #swagger-ui {
+            height: calc(100vh - 50px);
+            overflow-y: auto;
+            background: var(--vscode-editor-background);
+        }
+
+        /* Swagger UI Dark Theme Adjustments */
+        .swagger-ui {
+            color: var(--vscode-foreground);
+        }
+
+        .swagger-ui .info .title {
+            color: var(--vscode-foreground);
+        }
+
+        .swagger-ui .opblock-tag {
+            color: var(--vscode-foreground);
+            border-bottom-color: var(--vscode-panel-border);
+        }
+
+        .swagger-ui .opblock {
+            background: var(--vscode-editor-background);
+            border-color: var(--vscode-panel-border);
+        }
+
+        .swagger-ui .opblock .opblock-summary {
+            border-color: var(--vscode-panel-border);
+        }
+
+        .swagger-ui .scheme-container {
+            background: var(--vscode-editor-background);
+        }
+
+        .swagger-ui select {
+            background: var(--vscode-input-background);
+            color: var(--vscode-input-foreground);
+            border-color: var(--vscode-input-border);
+        }
+
+        .swagger-ui .model-box {
+            background: var(--vscode-editor-background);
+        }
+
+        .swagger-ui table thead tr td,
+        .swagger-ui table thead tr th {
+            color: var(--vscode-foreground);
+            border-bottom-color: var(--vscode-panel-border);
+        }
+
+        .swagger-ui .response-col_status {
+            color: var(--vscode-foreground);
+        }
+
+        #loading {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: calc(100vh - 50px);
+            color: var(--vscode-descriptionForeground);
+        }
+
+        #loading .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid var(--vscode-panel-border);
+            border-top-color: var(--vscode-textLink-foreground);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 16px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        #error {
+            display: none;
+            padding: 20px;
+            text-align: center;
+            color: var(--vscode-errorForeground);
+        }
+
+        #error.show {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div id="header">
+        <h1>
+            📄 API Documentation Preview
+            <span class="status" id="fileStatus">Loading...</span>
+        </h1>
+        <div class="controls">
+            <button class="button button-secondary" id="refreshBtn">
+                🔄 Refresh
+            </button>
+            <button class="button" id="openFileBtn">
+                📂 Open File
+            </button>
+            <button class="button button-secondary" id="exportBtn">
+                💾 Export
+            </button>
+        </div>
+    </div>
+
+    <div id="loading">
+        <div class="spinner"></div>
+        <p>Loading documentation...</p>
+    </div>
+
+    <div id="error">
+        <h2>❌ Failed to Load Documentation</h2>
+        <p id="errorMessage"></p>
+    </div>
+
+    <div id="swagger-ui"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.11.0/swagger-ui-bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.11.0/swagger-ui-standalone-preset.min.js"></script>
+    
+    <script>
+        const vscode = acquireVsCodeApi();
+
+        let currentSpec = null;
+
+        // Request documentation on load
+        window.addEventListener('load', () => {
+            vscode.postMessage({ command: 'loadDocumentation' });
+        });
+
+        // Handle messages from extension
+        window.addEventListener('message', event => {
+            const message = event.data;
+
+            switch (message.command) {
+                case 'showDocumentation':
+                    showDocumentation(message.spec, message.filename);
+                    break;
+                case 'showError':
+                    showError(message.message);
+                    break;
+            }
+        });
+
+        function showDocumentation(spec, filename) {
+            try {
+                // Hide loading, show swagger-ui
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('error').classList.remove('show');
+                document.getElementById('swagger-ui').style.display = 'block';
+
+                // Update status
+                document.getElementById('fileStatus').textContent = filename || 'openapi.yaml';
+
+                // Store spec
+                currentSpec = spec;
+
+                // Initialize Swagger UI
+                SwaggerUIBundle({
+                    spec: spec,
+                    dom_id: '#swagger-ui',
+                    deepLinking: true,
+                    presets: [
+                        SwaggerUIBundle.presets.apis,
+                        SwaggerUIStandalonePreset
+                    ],
+                    plugins: [
+                        SwaggerUIBundle.plugins.DownloadUrl
+                    ],
+                    layout: "StandaloneLayout",
+                    defaultModelsExpandDepth: 1,
+                    defaultModelExpandDepth: 1,
+                    docExpansion: 'list',
+                    filter: true,
+                    syntaxHighlight: {
+                        activate: true,
+                        theme: 'monokai'
+                    }
+                });
+
+            } catch (error) {
+                showError(`Failed to render documentation: ${error.message}`);
+            }
+        }
+
+        function showError(message) {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('swagger-ui').style.display = 'none';
+            
+            const errorDiv = document.getElementById('error');
+            errorDiv.classList.add('show');
+            document.getElementById('errorMessage').textContent = message;
+        }
+
+        // Button event listeners
+        document.getElementById('refreshBtn').addEventListener('click', () => {
+            document.getElementById('loading').style.display = 'flex';
+            document.getElementById('swagger-ui').style.display = 'none';
+            vscode.postMessage({ command: 'loadDocumentation' });
+        });
+
+        document.getElementById('openFileBtn').addEventListener('click', () => {
+            vscode.postMessage({ command: 'openFile' });
+        });
+
+        document.getElementById('exportBtn').addEventListener('click', () => {
+            vscode.postMessage({ command: 'export' });
+        });
+    </script>
+</body>
+</html>
