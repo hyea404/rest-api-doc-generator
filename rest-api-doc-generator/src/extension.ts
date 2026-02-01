@@ -7,6 +7,7 @@ import { DocumentationService } from './services/DocumentationService';
 import { ValidationService } from './services/ValidationService';
 import { SettingsPanelProvider } from './services/SettingsPanelProvider';
 import { PreviewPanelProvider } from './services/PreviewPanelProvider';
+import { ExportImportService } from './services/ExportImportService';
 import * as path from 'path';
 import * as fs from 'fs'; 
 
@@ -607,8 +608,72 @@ export function activate(context: vscode.ExtensionContext) {
         }
     );
 
+    // Command: Export Documentation
+    let exportDocsCommand = vscode.commands.registerCommand(
+        'rest-api-doc-generator.exportDocs',
+        async () => {
+            try {
+                const workspaceFolders = vscode.workspace.workspaceFolders;
+                if (!workspaceFolders) {
+                    vscode.window.showErrorMessage('❌ No workspace folder open');
+                    return;
+                }
 
-    context.subscriptions.push(setApiKeyCommand, checkApiKeyCommand, deleteApiKeyCommand, scanRoutesCommand, testConnectionCommand, testPromptCommand,listModelsCommand, generateDocsCommand, generateDocsQuickCommand, validateDocsCommand, openSettingsCommand, previewDocsCommand);
+                const workspaceRoot = workspaceFolders[0].uri.fsPath;
+
+                // Check if docs exist
+                const yamlExists = fs.existsSync(path.join(workspaceRoot, 'openapi.yaml'));
+                const jsonExists = fs.existsSync(path.join(workspaceRoot, 'openapi.json'));
+
+                if (!yamlExists && !jsonExists) {
+                    vscode.window.showWarningMessage('⚠️ No documentation found. Generate first.');
+                    return;
+                }
+
+                // Show format picker - use label only for matching
+                const format = await vscode.window.showQuickPick(
+                    ['📄 Export as YAML', '📋 Export as JSON', '📝 Export as Markdown'],
+                    { placeHolder: 'Select export format' }
+                );
+
+                if (!format) return;
+
+                const exportService = new ExportImportService(workspaceRoot);
+
+                if (format.includes('YAML')) {
+                    await exportService.exportAsYAML();
+                } else if (format.includes('JSON')) {
+                    await exportService.exportAsJSON();
+                } else if (format.includes('Markdown')) {
+                    await exportService.exportAsMarkdown();
+                }
+
+            } catch (error: any) {
+                console.error('❌ Export error:', error);
+                vscode.window.showErrorMessage(`❌ Export failed: ${error.message}`);
+            }
+        }
+    );
+
+
+    // Command: Import Documentation
+    let importDocsCommand = vscode.commands.registerCommand(
+        'rest-api-doc-generator.importDocs',
+        async () => {
+            const workspaceFolders = vscode.workspace.workspaceFolders;
+            if (!workspaceFolders) {
+                vscode.window.showErrorMessage('❌ No workspace folder open');
+                return;
+            }
+
+            const exportService = new ExportImportService(workspaceFolders[0].uri.fsPath);
+            await exportService.importDocumentation();
+        }
+    );
+
+
+
+    context.subscriptions.push(setApiKeyCommand, checkApiKeyCommand, deleteApiKeyCommand, scanRoutesCommand, testConnectionCommand, testPromptCommand,listModelsCommand, generateDocsCommand, generateDocsQuickCommand, validateDocsCommand, openSettingsCommand, previewDocsCommand, exportDocsCommand, importDocsCommand);
 }
 
 export function deactivate() {

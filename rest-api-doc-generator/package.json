@@ -65,6 +65,14 @@
         "command": "rest-api-doc-generator.previewDocs",
         "title": "REST API Docs: Preview Documentation",
         "icon": "$(preview)"
+      },
+      {
+        "command": "rest-api-doc-generator.exportDocs",
+        "title": "REST API Docs: Export Documentation"
+      },
+      {
+        "command": "rest-api-doc-generator.importDocs",
+        "title": "REST API Docs: Import Documentation"
       }
     ],
     "configuration": {
