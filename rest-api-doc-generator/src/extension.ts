@@ -8,6 +8,7 @@ import { ValidationService } from './services/ValidationService';
 import { SettingsPanelProvider } from './services/SettingsPanelProvider';
 import { PreviewPanelProvider } from './services/PreviewPanelProvider';
 import { ExportImportService } from './services/ExportImportService';
+import { FileWatcherService } from './services/FileWatcherService';
 import * as path from 'path';
 import * as fs from 'fs'; 
 
@@ -16,6 +17,7 @@ let storageService: SecureStorageService;
 let settingsPanelProvider: SettingsPanelProvider;
 // Create preview panel provider
 let previewPanelProvider: PreviewPanelProvider;
+let fileWatcherService: FileWatcherService | undefined;
 
 
 export function activate(context: vscode.ExtensionContext) {
@@ -393,31 +395,39 @@ export function activate(context: vscode.ExtensionContext) {
                 // Create documentation service
                 const docService = new DocumentationService(workspaceRoot, apiKey);
 
-                // Generate documentation
-                vscode.window.showInformationMessage('🤖 Generating documentation with AI...');
-                
-                const result = await docService.generateDocumentation(
-                    projectName,
-                    projectVersion
-                );
+                // Generate documentation with enhanced progress tracking
+                try {
+                    const result = await docService.generateDocumentation(
+                        projectName,
+                        projectVersion
+                    );
 
-                // Show success message
-                const action = await vscode.window.showInformationMessage(
-                    `✅ Documentation generated successfully!\n\nFiles:\n- ${path.basename(result.yamlPath)}\n- ${path.basename(result.jsonPath)}`,
-                    'Open YAML',
-                    'Open JSON',
-                    'Preview' // ADD THIS
-                );
+                    // Show success message
+                    const action = await vscode.window.showInformationMessage(
+                        `✅ Documentation generated successfully!\n\nFiles:\n- ${path.basename(result.yamlPath)}\n- ${path.basename(result.jsonPath)}`,
+                        'Open YAML',
+                        'Open JSON',
+                        'Preview'
+                    );
 
-                // Open file if user clicks button
-                if (action === 'Open YAML') {
-                    const doc = await vscode.workspace.openTextDocument(result.yamlPath);
-                    await vscode.window.showTextDocument(doc);
-                } else if (action === 'Open JSON') {
-                    const doc = await vscode.workspace.openTextDocument(result.jsonPath);
-                    await vscode.window.showTextDocument(doc);
-                } else if (action === 'Preview') { // ADD THIS
-                    await vscode.commands.executeCommand('rest-api-doc-generator.previewDocs');
+                    // Open file if user clicks button
+                    if (action === 'Open YAML') {
+                        const doc = await vscode.workspace.openTextDocument(result.yamlPath);
+                        await vscode.window.showTextDocument(doc);
+                    } else if (action === 'Open JSON') {
+                        const doc = await vscode.workspace.openTextDocument(result.jsonPath);
+                        await vscode.window.showTextDocument(doc);
+                    } else if (action === 'Preview') {
+                        await vscode.commands.executeCommand('rest-api-doc-generator.previewDocs');
+                    }
+
+                } catch (error: any) {
+                    // Handle cancellation separately from errors
+                    if (error.message && error.message.includes('cancelled')) {
+                        vscode.window.showWarningMessage('⚠️ Documentation generation was cancelled');
+                    } else {
+                        throw error; // Re-throw to outer catch block
+                    }
                 }
 
             } catch (error: any) {
@@ -671,9 +681,83 @@ export function activate(context: vscode.ExtensionContext) {
         }
     );
 
+    // Auto-Sync Commands
+    let toggleAutoSyncCommand = vscode.commands.registerCommand(
+        'rest-api-doc-generator.toggleAutoSync',
+        async () => {
+            const workspaceFolders = vscode.workspace.workspaceFolders;
+            if (!workspaceFolders) {
+                vscode.window.showErrorMessage('❌ No workspace folder open');
+                return;
+            }
 
+            const workspaceRoot = workspaceFolders[0].uri.fsPath;
 
-    context.subscriptions.push(setApiKeyCommand, checkApiKeyCommand, deleteApiKeyCommand, scanRoutesCommand, testConnectionCommand, testPromptCommand,listModelsCommand, generateDocsCommand, generateDocsQuickCommand, validateDocsCommand, openSettingsCommand, previewDocsCommand, exportDocsCommand, importDocsCommand);
+            // If watcher exists and is active, stop it
+            if (fileWatcherService && fileWatcherService.isActive()) {
+                fileWatcherService.stop();
+                fileWatcherService = undefined;
+                vscode.window.showInformationMessage('⏸️ Auto-sync disabled.');
+                return;
+            }
+
+            // Get API key
+            const apiKey = await storageService.getApiKey();
+            if (!apiKey) {
+                vscode.window.showWarningMessage('⚠️ API key not set. Please set API key first.');
+                return;
+            }
+
+            // Create watcher with smart incremental sync callback
+            fileWatcherService = new FileWatcherService(
+                workspaceRoot,
+                async (changedFilePath: string) => {
+                    try {
+                        await vscode.window.withProgress(
+                            {
+                                location: vscode.ProgressLocation.Notification,
+                                title: '🔄 Auto-Sync (AI-Powered)',
+                                cancellable: false
+                            },
+                            async (progress) => {
+                                const fileName = path.basename(changedFilePath);
+                                progress.report({ message: `File changed: ${fileName}`, increment: 10 });
+
+                                const docService = new DocumentationService(workspaceRoot, apiKey);
+                                
+                                progress.report({ message: 'Parsing changed file...', increment: 20 });
+                                
+                                // Smart incremental sync - only process changed file
+                                await docService.generateForChangedFile(changedFilePath);
+
+                                progress.report({ message: 'Updating documentation...', increment: 40 });
+                                
+                                // Update preview if open
+                                if (previewPanelProvider) {
+                                    await previewPanelProvider.update();
+                                }
+
+                                progress.report({ message: 'Done ✅', increment: 30 });
+                            }
+                        );
+
+                        vscode.window.showInformationMessage(
+                            `✅ Documentation synced for ${path.basename(changedFilePath)}!`
+                        );
+
+                    } catch (error: any) {
+                        console.error('❌ Auto-sync failed:', error);
+                        vscode.window.showErrorMessage(`❌ Auto-sync failed: ${error.message}`);
+                    }
+                }
+            );
+
+            // Start watching
+            fileWatcherService.start();
+        }
+    );
+
+    context.subscriptions.push(setApiKeyCommand, checkApiKeyCommand, deleteApiKeyCommand, scanRoutesCommand, testConnectionCommand, testPromptCommand,listModelsCommand, generateDocsCommand, generateDocsQuickCommand, validateDocsCommand, openSettingsCommand, previewDocsCommand, exportDocsCommand, importDocsCommand, toggleAutoSyncCommand);
 }
 
 export function deactivate() {

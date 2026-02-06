@@ -73,6 +73,10 @@
       {
         "command": "rest-api-doc-generator.importDocs",
         "title": "REST API Docs: Import Documentation"
+      },
+      {
+        "command": "rest-api-doc-generator.toggleAutoSync",
+        "title": "REST API Docs: Toggle Auto-Sync Documentation"
       }
     ],
     "configuration": {

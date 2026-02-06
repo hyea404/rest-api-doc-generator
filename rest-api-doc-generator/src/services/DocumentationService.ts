@@ -48,20 +48,42 @@ export class DocumentationService {
                 'Auto-generated API documentation using AI'
             );
 
-            // Step 3: Generate documentation with AI (with progress)
+            // Step 3: Generate documentation with AI (with detailed progress)
             await vscode.window.withProgress({
                 location: vscode.ProgressLocation.Notification,
-                title: 'Generating API Documentation',
-                cancellable: false
-            }, async (progress) => {
+                title: 'Generating API Documentation with AI',
+                cancellable: true
+            }, async (progress, token) => {
                 const routes = scanResult.routes;
                 const totalRoutes = routes.length;
+                const startTime = Date.now();
 
                 for (let i = 0; i < totalRoutes; i++) {
+                    // Check if user cancelled
+                    if (token.isCancellationRequested) {
+                        throw new Error('Documentation generation cancelled by user');
+                    }
+
                     const route = routes[i];
+                    const routeLabel = `${route.method} ${route.path}`;
                     
+                    // Calculate progress percentage
+                    const percentComplete = Math.floor((i / totalRoutes) * 100);
+                    
+                    // Estimate time remaining
+                    const elapsedMs = Date.now() - startTime;
+                    const avgTimePerRoute = elapsedMs / (i + 1);
+                    const remainingRoutes = totalRoutes - (i + 1);
+                    const estimatedRemainingMs = avgTimePerRoute * remainingRoutes;
+                    const estimatedMinutes = Math.ceil(estimatedRemainingMs / 60000);
+                    const estimatedSeconds = Math.ceil((estimatedRemainingMs % 60000) / 1000);
+                    
+                    const timeEstimate = estimatedMinutes > 0 
+                        ? `~${estimatedMinutes}m ${estimatedSeconds}s remaining`
+                        : `~${estimatedSeconds}s remaining`;
+
                     progress.report({
-                        message: `Processing route ${i + 1}/${totalRoutes}: ${route.method} ${route.path}`,
+                        message: `[${i + 1}/${totalRoutes}] ${routeLabel} | ${percentComplete}% | ${timeEstimate}`,
                         increment: (100 / totalRoutes)
                     });
 
@@ -72,23 +94,29 @@ export class DocumentationService {
                         // Add to generator
                         generator.addRouteWithAIDoc(route, aiDoc);
                         
-                        console.log(`✅ Generated docs for: ${route.method} ${route.path}`);
+                        console.log(`✅ [${i + 1}/${totalRoutes}] Generated docs for: ${routeLabel}`);
                         
                         // Small delay to avoid rate limiting
                         await this.sleep(500);
                         
                     } catch (error) {
-                        console.warn(`⚠️ Failed to generate AI docs for ${route.method} ${route.path}, using fallback`);
+                        console.warn(`⚠️ Failed to generate AI docs for ${routeLabel}, using fallback`);
                         // Fallback to manual generation happens inside addRouteWithAIDoc
                     }
                 }
+
+                // Final step
+                progress.report({
+                    message: 'Finalizing documentation...',
+                    increment: 100
+                });
             });
 
             // Step 4: Finalize document
             console.log('🔧 Finalizing document...');
             generator.finalizeDocument();
 
-            // Step 5: Set server info (nomor step berubah jadi 5)
+            // Step 5: Set server info
             generator.setServer('http://localhost:3000', 'Development server');
 
             // Step 6: Generate YAML and JSON
@@ -131,8 +159,6 @@ export class DocumentationService {
             throw error;
         }
     }
-
-
 
     /**
      * Generate documentation for specific file
@@ -204,6 +230,95 @@ export class DocumentationService {
             throw error;
         }
     }
+
+    /**
+     * Generate documentation for a single changed file (incremental sync)
+     */
+    async generateForChangedFile(changedFilePath: string): Promise<{ yamlPath: string; jsonPath: string }> {
+        try {
+            console.log(`🔄 Incremental sync for: ${changedFilePath}`);
+
+            // Step 1: Parse only the changed file
+            const changedRoutes = await this.parserService.parseFile(changedFilePath);
+            
+            if (changedRoutes.length === 0) {
+                console.log('ℹ️ No routes in changed file, skipping...');
+                // File might have been deleted or has no routes anymore
+                // Still need to regenerate full docs to reflect this
+                return await this.generateQuick();
+            }
+
+            // Step 2: Read existing documentation
+            const yamlPath = path.join(this.workspaceRoot, 'openapi.yaml');
+            const jsonPath = path.join(this.workspaceRoot, 'openapi.json');
+
+            let existingDoc: any = null;
+            if (fs.existsSync(yamlPath)) {
+                const yaml = require('js-yaml');
+                const yamlContent = await fs.promises.readFile(yamlPath, 'utf-8');
+                existingDoc = yaml.load(yamlContent);
+            } else if (fs.existsSync(jsonPath)) {
+                const jsonContent = await fs.promises.readFile(jsonPath, 'utf-8');
+                existingDoc = JSON.parse(jsonContent);
+            }
+
+            // Step 3: If no existing doc, do full generation
+            if (!existingDoc) {
+                console.log('ℹ️ No existing documentation, doing full generation...');
+                return await this.generateDocumentation();
+            }
+
+            // Step 4: Remove old routes from the changed file
+            const pathsToRemove = changedRoutes.map(r => r.path);
+            if (existingDoc.paths) {
+                pathsToRemove.forEach(path => {
+                    delete existingDoc.paths[path];
+                });
+            }
+
+            // Step 5: Generate AI docs for changed routes only
+            console.log(`🤖 Generating AI docs for ${changedRoutes.length} route(s)...`);
+            
+            for (const route of changedRoutes) {
+                try {
+                    const aiDoc = await this.aiClient.generateDocumentation(route);
+                    
+                    // Parse AI response and add to existing doc
+                    const yaml = require('js-yaml');
+                    const newRouteDoc = yaml.load(aiDoc);
+                    
+                    if (newRouteDoc && newRouteDoc.paths) {
+                        // Merge new route into existing paths
+                        if (!existingDoc.paths) {
+                            existingDoc.paths = {};
+                        }
+                        Object.assign(existingDoc.paths, newRouteDoc.paths);
+                    }
+                    
+                    await this.sleep(500); // Rate limiting
+                    
+                } catch (error) {
+                    console.warn(`⚠️ Failed to generate AI docs for ${route.method} ${route.path}`);
+                }
+            }
+
+            // Step 6: Write updated documentation
+            const yaml = require('js-yaml');
+            const yamlContent = yaml.dump(existingDoc, { indent: 2, lineWidth: -1 });
+            const jsonContent = JSON.stringify(existingDoc, null, 2);
+
+            await fs.promises.writeFile(yamlPath, yamlContent, 'utf-8');
+            await fs.promises.writeFile(jsonPath, jsonContent, 'utf-8');
+
+            console.log('✅ Incremental sync completed');
+            return { yamlPath, jsonPath };
+
+        } catch (error) {
+            console.error('❌ Incremental sync failed:', error);
+            throw error;
+        }
+    }
+
 
     /**
      * Sleep utility
