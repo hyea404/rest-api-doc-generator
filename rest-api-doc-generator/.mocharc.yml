@@ -1,0 +1,24 @@
+# Mocha configuration for TypeScript tests
+require:
+  - ts-node/register
+  - ./test/unit/_vscode-stub.ts
+
+spec:
+  - 'test/unit/**/*.test.ts'
+  - 'test/integration/**/*.test.ts'
+
+extension:
+  - ts
+
+timeout: 10000
+
+reporter: spec
+
+ui: bdd
+
+recursive: true
+
+exit: true
+
+# Coverage with nyc
+enable-source-maps: true
