@@ -1,0 +1,210 @@
+openapi: 3.1.0
+info:
+  title: REST API Documentation
+  version: 1.0.0
+  description: Auto-generated API documentation
+servers:
+  - url: http://localhost:3000
+    description: API Server
+paths:
+  /:
+    get:
+      summary: Get Resource
+      description: GET operation for /
+      operationId: getResource
+      tags:
+        - Default
+      parameters: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: unknown
+    post:
+      summary: Create Resource
+      description: POST operation for /
+      operationId: postResource
+      tags:
+        - Default
+      parameters: []
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: unknown
+  /{id}:
+    get:
+      summary: Get :id
+      description: GET operation for /:id
+      operationId: get:idById
+      tags:
+        - ':id'
+      parameters:
+        - name: id
+          in: path
+          description: id parameter
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+    put:
+      summary: Update :id
+      description: PUT operation for /:id
+      operationId: put:idById
+      tags:
+        - ':id'
+      parameters:
+        - name: id
+          in: path
+          description: id parameter
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: unknown
+    delete:
+      summary: Delete :id
+      description: DELETE operation for /:id
+      operationId: delete:idById
+      tags:
+        - ':id'
+      parameters:
+        - name: id
+          in: path
+          description: id parameter
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+        '204':
+          description: No Content
+          content:
+            text/plain:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: unknown
+    patch:
+      summary: Update :id
+      description: PATCH operation for /:id
+      operationId: patch:idById
+      tags:
+        - ':id'
+      parameters:
+        - name: id
+          in: path
+          description: id parameter
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: unknown
+components:
+  schemas: {}
+tags:
+  - name: Default
+    description: Default related endpoints
+  - name: ':id'
+    description: ':id related endpoints'
