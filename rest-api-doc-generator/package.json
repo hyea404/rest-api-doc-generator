@@ -1,0 +1,186 @@
+{
+  "name": "rest-api-doc-generator",
+  "displayName": "REST API Doc Generator",
+  "description": "Automatic REST API documentation generator using OpenAPI 3.1 with AI",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.108.1"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "rest-api-doc-generator.helloWorld",
+        "title": "Hello World"
+      },
+      {
+        "command": "rest-api-doc-generator.setApiKey",
+        "title": "REST API Docs: Set OpenRouter API Key"
+      },
+      {
+        "command": "rest-api-doc-generator.checkApiKey",
+        "title": "REST API Docs: Check API Key Status"
+      },
+      {
+        "command": "rest-api-doc-generator.deleteApiKey",
+        "title": "REST API Docs: Delete API Key"
+      },
+      {
+        "command": "rest-api-doc-generator.scanRoutes",
+        "title": "REST API Docs: Scan Routes"
+      },
+      {
+        "command": "rest-api-doc-generator.testConnection",
+        "title": "REST API Docs: Test OpenRouter Connection"
+      },
+      {
+        "command": "rest-api-doc-generator.testPrompt",
+        "title": "REST API Docs: Test Prompt Generation"
+      },
+      {
+        "command": "rest-api-doc-generator.listModels",
+        "title": "REST API Docs: List Available Models"
+      },
+      {
+        "command": "rest-api-doc-generator.generateDocs",
+        "title": "REST API Docs: Generate Documentation (AI-Powered)"
+      },
+      {
+        "command": "rest-api-doc-generator.generateDocsQuick",
+        "title": "REST API Docs: Generate Documentation (Quick)"
+      },
+      {
+        "command": "rest-api-doc-generator.validateDocs",
+        "title": "REST API Docs: Validate OpenAPI Document"
+      },
+      {
+        "command": "rest-api-doc-generator.openSettings",
+        "title": "REST API Docs: Open Settings"
+      },
+      {
+        "command": "rest-api-doc-generator.previewDocs",
+        "title": "REST API Docs: Preview Documentation",
+        "icon": "$(preview)"
+      },
+      {
+        "command": "rest-api-doc-generator.exportDocs",
+        "title": "REST API Docs: Export Documentation"
+      },
+      {
+        "command": "rest-api-doc-generator.importDocs",
+        "title": "REST API Docs: Import Documentation"
+      },
+      {
+        "command": "rest-api-doc-generator.toggleAutoSync",
+        "title": "REST API Docs: Toggle Auto-Sync Documentation"
+      }
+    ],
+    "configuration": {
+      "title": "REST API Documentation Generator",
+      "properties": {
+        "restApiDocs.aiModel": {
+          "type": "string",
+          "default": "google/gemma-3-12b-it:free",
+          "description": "AI model for documentation generation",
+          "enum": [
+            "google/gemma-3-12b-it:free",
+            "google/gemma-3-27b-it:free",
+            "google/gemma-3-4b-it:free"
+          ]
+        },
+        "restApiDocs.apiTitle": {
+          "type": "string",
+          "default": "REST API Documentation",
+          "description": "Default title for generated documentation"
+        },
+        "restApiDocs.apiVersion": {
+          "type": "string",
+          "default": "1.0.0",
+          "description": "Default version for generated documentation"
+        },
+        "restApiDocs.serverUrl": {
+          "type": "string",
+          "default": "http://localhost:3000",
+          "description": "Default server URL for API endpoints"
+        },
+        "restApiDocs.autoValidate": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically validate generated documentation"
+        },
+        "restApiDocs.generateBoth": {
+          "type": "boolean",
+          "default": true,
+          "description": "Generate both YAML and JSON formats"
+        },
+        "restApiDocs.extractSchemas": {
+          "type": "boolean",
+          "default": true,
+          "description": "Extract reusable schemas to components"
+        }
+      }
+    },
+    "menus": {
+      "explorer/context": [
+        {
+          "command": "rest-api-doc-generator.previewDocs",
+          "when": "resourceFilename =~ /openapi\\.(yaml|yml|json)$/",
+          "group": "navigation"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run package",
+    "compile": "webpack",
+    "watch": "webpack --watch",
+    "package": "webpack --mode production --devtool hidden-source-map",
+    "compile-tests": "tsc -p . --outDir out",
+    "watch-tests": "tsc -p . -w --outDir out",
+    "pretest": "npm run compile-tests && npm run compile && npm run lint",
+    "lint": "eslint src",
+    "test": "node ./out/test/runTest.js",
+    "test:unit": "npm run compile-tests && mocha ./out/test/unit/**/*.test.js",
+    "test:unit:watch": "npm run compile-tests && mocha ./out/test/unit/**/*.test.js --watch",
+    "test:coverage": "npm run compile-tests && nyc npm run test:unit",
+    "test:coverage:report": "npm run test:coverage && open coverage/index.html"
+  },
+  "devDependencies": {
+    "@types/babel__core": "^7.20.5",
+    "@types/babel__parser": "^7.0.0",
+    "@types/babel__traverse": "^7.28.0",
+    "@types/chai": "^5.2.3",
+    "@types/glob": "^8.1.0",
+    "@types/js-yaml": "^4.0.9",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "22.x",
+    "@types/sinon": "^21.0.0",
+    "@types/vscode": "^1.108.1",
+    "@vscode/test-cli": "^0.0.12",
+    "@vscode/test-electron": "^2.5.2",
+    "chai": "^6.2.2",
+    "eslint": "^9.39.2",
+    "glob": "^7.2.3",
+    "mocha": "^11.7.5",
+    "nyc": "^18.0.0",
+    "sinon": "^21.0.1",
+    "ts-loader": "^9.5.4",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.52.0",
+    "webpack": "^5.104.1",
+    "webpack-cli": "^6.0.1"
+  },
+  "dependencies": {
+    "@babel/parser": "^7.28.6",
+    "@babel/traverse": "^7.28.6",
+    "@babel/types": "^7.28.6",
+    "axios": "^1.13.2",
+    "js-yaml": "^4.1.1",
+    "openapi-schema-validator": "^12.1.3"
+  }
+}
