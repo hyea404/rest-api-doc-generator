@@ -13,6 +13,10 @@
 		"esModuleInterop": true,
 		"resolveJsonModule": true,
 		"skipLibCheck": true,
+		"forceConsistentCasingInFileNames": true,
+		"declaration": true,
+		"declarationMap": true,
+		"allowSyntheticDefaultImports": true,
 
 		"typeRoots": [
 		"./node_modules/@types",
@@ -29,6 +33,6 @@
 		"src/**/*"
 	],
 
-	"exclude": ["node_modules", ".vscode-test"]
+	"exclude": ["node_modules", ".out"]
 
 }

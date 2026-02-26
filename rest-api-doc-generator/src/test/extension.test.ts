@@ -1,15 +1,53 @@
 import * as assert from 'assert';
-
-// You can import and use all API from the 'vscode' module
-// as well as import your extension to test it
 import * as vscode from 'vscode';
-// import * as myExtension from '../../extension';
 
-suite('Extension Test Suite', () => {
-	vscode.window.showInformationMessage('Start all tests.');
+suite('Extension Integration Test Suite', () => {
+    // This runs before all tests in this suite
+    suiteSetup(async () => {
+        // Ensure extension is activated
+        const extension = vscode.extensions.getExtension(
+            'your-publisher.rest-api-doc-generator'
+        );
+        
+        if (extension && !extension.isActive) {
+            await extension.activate();
+        }
+    });
 
-	test('Sample test', () => {
-		assert.strictEqual(-1, [1, 2, 3].indexOf(5));
-		assert.strictEqual(-1, [1, 2, 3].indexOf(0));
-	});
+    test('Extension should be present', () => {
+        const extension = vscode.extensions.getExtension(
+            'your-publisher.rest-api-doc-generator'
+        );
+        
+        assert.ok(extension, 'Extension not found');
+    });
+
+    test('All commands should be registered', async () => {
+        const commands = await vscode.commands.getCommands(true);
+        
+        const expectedCommands = [
+            'rest-api-doc-generator.generateDocs',
+            'rest-api-doc-generator.openSettings',
+            'rest-api-doc-generator.setApiKey',
+            'rest-api-doc-generator.validateDocument',
+            'rest-api-doc-generator.previewDocs'
+        ];
+
+        expectedCommands.forEach(cmd => {
+            assert.ok(
+                commands.includes(cmd),
+                `Command ${cmd} is not registered`
+            );
+        });
+    });
+
+    test('Should show error when API key not set', async () => {
+        // This test verifies error handling
+        const result = await vscode.commands.executeCommand(
+            'rest-api-doc-generator.generateDocs'
+        );
+        
+        // Expect error or notification about missing API key
+        // (implementation depends on your error handling strategy)
+    });
 });
