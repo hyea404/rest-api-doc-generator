@@ -147,7 +147,8 @@
     "test:unit": "npm run compile-tests && mocha ./out/test/unit/**/*.test.js",
     "test:unit:watch": "npm run compile-tests && mocha ./out/test/unit/**/*.test.js --watch",
     "test:coverage": "npm run compile-tests && nyc npm run test:unit",
-    "test:coverage:report": "npm run test:coverage && open coverage/index.html"
+    "test:coverage:report": "npm run test:coverage && open coverage/index.html",
+    "test:validation": "npm run compile-tests && mocha --no-config --timeout 10000 --exit ./out/test/validation/OpenAPIValidation.test.js"
   },
   "devDependencies": {
     "@types/babel__core": "^7.20.5",
